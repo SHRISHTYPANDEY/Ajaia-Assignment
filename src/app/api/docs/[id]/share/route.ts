@@ -7,11 +7,20 @@ type Ctx = { params: Promise<{ id: string }> };
 
 async function requireOwner(id: string) {
   const user = await getCurrentUser();
-  if (!user) return { error: NextResponse.json({ error: "Not logged in" }, { status: 401 }) };
+  if (!user)
+    return { error: NextResponse.json({ error: "Not logged in" }, { status: 401 }), user: null, doc: null };
+
   const { doc, access } = await loadDocWithAccess(id, user.id);
-  if (!doc) return { error: NextResponse.json({ error: "Not found" }, { status: 404 }) };
-  if (access !== "owner") return { error: NextResponse.json({ error: "Sirf owner share kar sakta hai" }, { status: 403 }) };
-  return { user, doc };
+  if (!doc)
+    return { error: NextResponse.json({ error: "Not found" }, { status: 404 }), user: null, doc: null };
+  if (access !== "owner")
+    return {
+      error: NextResponse.json({ error: "Only the owner can share this document" }, { status: 403 }),
+      user: null,
+      doc: null,
+    };
+
+  return { error: null, user, doc };
 }
 
 export async function GET(_: Request, { params }: Ctx) {
@@ -36,8 +45,9 @@ export async function POST(req: Request, { params }: Ctx) {
   if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
 
   const { data: target } = await db.from("users").select("id,name,email").eq("email", email).single();
-  if (!target) return NextResponse.json({ error: "Is email ka user nahi mila" }, { status: 404 });
-  if (target.id === g.user!.id) return NextResponse.json({ error: "Apne aap ko share nahi kar sakte" }, { status: 400 });
+  if (!target) return NextResponse.json({ error: "No user found with that email" }, { status: 404 });
+  if (target.id === g.user.id)
+    return NextResponse.json({ error: "You cannot share a document with yourself" }, { status: 400 });
 
   const { error } = await db.from("shares").upsert({ document_id: id, user_id: target.id });
   if (error) return NextResponse.json({ error: "Share failed" }, { status: 500 });

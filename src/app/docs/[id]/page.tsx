@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
-export default function EditorPage() {
+
+function EditorInner() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -122,5 +123,13 @@ export default function EditorPage() {
         <EditorContent editor={editor} />
       </div>
     </main>
+  );
+}
+
+export default function EditorPage() {
+  return (
+    <Suspense fallback={<p style={{ padding: 20 }}>Loading...</p>}>
+      <EditorInner />
+    </Suspense>
   );
 }

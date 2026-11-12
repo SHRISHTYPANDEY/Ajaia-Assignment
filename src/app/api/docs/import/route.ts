@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { textToHtml } from "@/lib/textToHtml";
 
-const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+const MAX_BYTES = 2 * 1024 * 1024;
 const ALLOWED = ["txt", "md", "docx"];
 
 export async function POST(req: Request) {
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const title = file.name.replace(/\.[^.]+$/, "").slice(0, 200) || "Imported document";
+const title = file.name.replace(/\.[^.]+$/, "").slice(0, 200) || "Imported document";
   const { data, error } = await db
     .from("documents")
     .insert({ title, content: html, owner_id: user.id })
